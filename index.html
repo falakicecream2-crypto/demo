@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Zaraa Couture — Chatbot Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --primary:#5a1a30; --dark:#2a0c18; --light:#faf0f3; --gold:#c9a24d; --goldL:#e8cfa6; }
+  body { font-family:'DM Sans',sans-serif; background:linear-gradient(135deg,#150810 0%,#2a0c18 50%,#150810 100%); min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:2rem 1rem; }
+  .picker { text-align:center; margin-bottom:1.25rem; }
+  .picker h1 { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:700; color:#f5ede1; letter-spacing:.3px; }
+  .picker p { font-size:14px; color:rgba(245,237,225,.65); }
+  .card { background:#fff; border-radius:22px; box-shadow:0 30px 80px rgba(0,0,0,.4),0 4px 20px rgba(0,0,0,.2); width:100%; max-width:460px; overflow:hidden; }
+  .profile { padding:22px 20px 16px; color:#fff; text-align:center; position:relative; overflow:hidden; background:linear-gradient(135deg,var(--dark),var(--primary),var(--dark)); border-bottom:2px solid var(--gold); }
+  .profile::before { content:''; position:absolute; top:-30px; right:-30px; width:120px; height:120px; background:rgba(255,255,255,.08); border-radius:50%; }
+  .profile::after { content:''; position:absolute; bottom:-20px; left:-20px; width:80px; height:80px; background:rgba(255,255,255,.05); border-radius:50%; }
+  .profile > * { position:relative; z-index:1; }
+  .profile-icon { width:56px; height:56px; border-radius:16px; background:var(--gold); color:var(--dark); display:flex; align-items:center; justify-content:center; font:700 28px 'Cormorant Garamond',serif; margin:0 auto 10px; box-shadow:0 4px 12px rgba(0,0,0,.25); }
+  .profile-name { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:700; letter-spacing:.3px; }
+  .profile-tagline { font-size:11.5px; opacity:.9; margin:2px 0 8px; letter-spacing:.6px; text-transform:uppercase; color:var(--goldL); }
+  .online-badge { display:flex; align-items:center; justify-content:center; gap:5px; margin-bottom:8px; font-size:11.5px; }
+  .online-dot { width:7px; height:7px; background:#4ade80; border-radius:50%; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .rating-row { font-size:12px; margin-bottom:4px; }
+  .stars { color:var(--goldL); letter-spacing:1px; }
+  .profile-row2 { display:flex; flex-wrap:wrap; justify-content:center; gap:6px 14px; font-size:11.5px; margin-top:6px; }
+  .profile-row2 a { color:#fff; text-decoration:none; }
+  .status-badge { background:rgba(255,255,255,.18); padding:2px 9px; border-radius:12px; font-weight:600; }
+  .nav-tabs { display:flex; gap:6px; overflow-x:auto; padding:10px 12px; background:#faf5ed; border-bottom:1px solid #e8d5b8; scrollbar-width:none; }
+  .nav-tabs::-webkit-scrollbar { display:none; }
+  .nav-tab { flex-shrink:0; padding:6px 13px; font-size:12px; font-weight:600; border:1.5px solid #e8d5b8; border-radius:18px; background:#fff; color:#5a1a30; cursor:pointer; white-space:nowrap; transition:.15s; }
+  .nav-tab:hover { background:var(--light); }
+  .messages { padding:16px; height:320px; overflow-y:auto; background:#fafaf8; display:flex; flex-direction:column; gap:10px; }
+  .msg-wrap { display:flex; flex-direction:column; max-width:84%; }
+  .user-wrap { align-self:flex-end; align-items:flex-end; }
+  .bot-wrap { align-self:flex-start; align-items:flex-start; }
+  .msg { padding:10px 14px; font-size:14px; line-height:1.55; white-space:pre-wrap; word-break:break-word; animation:fadeUp .25s ease; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+  .msg.bot { background:#fff; border:1px solid #eee; box-shadow:0 1px 6px rgba(0,0,0,.06); color:#1a1a1a; border-radius:4px 18px 18px 18px; }
+  .msg.user { color:#fff; border-radius:18px 4px 18px 18px; background:linear-gradient(135deg,var(--primary),var(--dark)); }
+  .msg.typing { color:#888; font-style:italic; background:#f7f7f8; border:1px solid #eee; border-radius:4px 18px 18px 18px; }
+  .msg-time { font-size:10.5px; color:#999; padding:2px 5px 0; }
+  .btns { align-self:flex-start; display:flex; gap:6px; flex-wrap:wrap; }
+  .btns button,.btns a { padding:8px 18px; font-size:13px; font-weight:700; border:none; border-radius:20px; color:#fff; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+  .btns button:hover,.btns a:hover { opacity:.85; }
+  .quick-btns { display:flex; gap:6px; flex-wrap:wrap; padding:8px 16px 4px; }
+  .qbtn { padding:6px 12px; font-size:12px; border:1.5px solid var(--gold); color:var(--primary); border-radius:20px; background:#fff; cursor:pointer; font-weight:600; transition:.15s; }
+  .qbtn:hover { background:var(--light); }
+  .opts { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .opt { padding:6px 13px; border-radius:20px; border:1.5px solid var(--primary); color:var(--primary); background:#fff; font-size:12px; font-weight:600; cursor:pointer; transition:.15s; }
+  .opt:hover { background:var(--primary); color:#fff; }
+  .input-row { display:flex; gap:8px; padding:12px 16px; border-top:1px solid #e8d5b8; background:#fff; }
+  .input-row input { flex:1; padding:10px 14px; font-size:14px; border:1.5px solid #e8d5b8; border-radius:12px; outline:none; background:#faf5ed; transition:.2s; }
+  .input-row input:focus { border-color:var(--primary); background:#fff; }
+  .send-btn { width:40px; height:40px; border-radius:12px; color:#fff; border:none; cursor:pointer; font-size:16px; background:linear-gradient(135deg,var(--primary),var(--dark)); }
+  .send-btn:disabled { opacity:.4; cursor:not-allowed; }
+  .footer { margin-top:1rem; text-align:center; font-size:12px; color:rgba(245,237,225,.5); }
+  .footer a { color:var(--goldL); text-decoration:none; font-weight:600; }
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:999; align-items:center; justify-content:center; padding:1rem; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:#fff; border-radius:20px; padding:24px; width:100%; max-width:400px; max-height:92vh; overflow-y:auto; box-shadow:0 8px 40px rgba(0,0,0,.35); animation:slideUp .25s ease; }
+  @keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:none;opacity:1} }
+  .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+  .modal-header h2 { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:700; color:#1a1a1a; }
+  .modal-close { background:none; border:none; font-size:20px; cursor:pointer; color:#999; }
+  .form-group { margin-bottom:14px; }
+  .form-group label { display:block; font-size:12px; font-weight:600; color:#5a1a30; margin-bottom:5px; text-transform:uppercase; letter-spacing:.4px; }
+  .form-group input,.form-group select,.form-group textarea { width:100%; padding:10px 12px; font-size:14px; border:1.5px solid #e8d5b8; border-radius:10px; outline:none; font-family:inherit; background:#faf5ed; }
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus { border-color:var(--primary); background:#fff; }
+  .form-group textarea { resize:none; height:70px; }
+  .form-row { display:flex; gap:10px; } .form-row .form-group { flex:1; }
+  .submit-btn { width:100%; padding:12px; font-size:14px; font-weight:700; border:none; border-radius:12px; color:#fff; cursor:pointer; background:linear-gradient(135deg,var(--primary),var(--dark)); }
+  .submit-btn:hover { opacity:.88; }
+  .success-state { display:none; text-align:center; padding:10px 0; }
+  .success-icon { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; margin:0 auto 14px; background:var(--light); }
+  .success-state h3 { font-family:'Cormorant Garamond',serif; font-size:19px; color:#1a1a1a; margin-bottom:6px; }
+  .success-state p { font-size:13px; color:#666; margin-bottom:18px; line-height:1.5; }
+  .action-row { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .wa-btn,.call-btn { display:inline-flex; align-items:center; gap:8px; padding:11px 22px; font-size:14px; font-weight:700; color:#fff; border-radius:12px; text-decoration:none; }
+  .wa-btn { background:#25D366; } .call-btn { background:#2a0c18; }
+</style>
+</head>
+<body>
+
+<div class="picker">
+  <h1>Nexabot Chatbot Demo</h1>
+  <p>Fashion &amp; Clothing Brand Assistant</p>
+</div>
+
+<div class="card">
+  <div class="profile">
+    <div class="profile-icon" id="pIcon"></div>
+    <div class="profile-name" id="pName"></div>
+    <div class="profile-tagline" id="pTag"></div>
+    <div class="online-badge"><div class="online-dot"></div><div>AI Assistant · Available now</div></div>
+    <div class="rating-row" id="pRating"></div>
+    <div class="profile-row2" id="pRow2"></div>
+  </div>
+  <div class="nav-tabs" id="navTabs"></div>
+  <div class="messages" id="msgs"></div>
+  <div class="quick-btns" id="quickBtns"></div>
+  <div class="input-row">
+    <input type="text" id="userInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMsg()" />
+    <button class="send-btn" id="sendBtn" onclick="sendMsg()">➤</button>
+  </div>
+</div>
+
+<div class="footer">Powered by <a href="https://nexabot16.github.io" target="_blank">Nexabot</a> — Custom Chatbots for Businesses</div>
+
+<!-- ORDER MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div id="formState">
+      <div class="modal-header"><h2>Place Your Order</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+      <div class="form-row">
+        <div class="form-group"><label>Full Name</label><input type="text" id="fName" placeholder="Your name" /></div>
+        <div class="form-group"><label>Phone</label><input type="tel" id="fPhone" placeholder="03XX-XXXXXXX" /></div>
+      </div>
+      <div class="form-group"><label>Product</label><select id="fProduct"></select></div>
+      <div class="form-row">
+        <div class="form-group"><label>Size</label><select id="fSize"></select></div>
+        <div class="form-group"><label>Qty</label><select id="fQty"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+      </div>
+      <div class="form-group"><label>Delivery Address</label><textarea id="fAddress" placeholder="House no, street, area, city"></textarea></div>
+      <button class="submit-btn" onclick="submitForm()">Confirm Order</button>
+    </div>
+    <div class="success-state" id="successState">
+      <div class="success-icon">📩</div>
+      <h3>One Last Step!</h3>
+      <p id="successMsg"></p>
+      <div class="action-row">
+        <a id="waLink" class="wa-btn" target="_blank">💬 Send on WhatsApp</a>
+        <a id="callLink" class="call-btn">📞 Call Now</a>
+      </div>
+      <div style="margin-top:10px"><button onclick="closeModal()" style="background:none;border:none;color:#999;font-size:13px;cursor:pointer">Close</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ BUSINESS CONFIG: naye client ke liye sirf yeh hissa badlo ============ */
+const B = {
+  icon: "Z", name: "Zaraa Couture", tagline: "Women's Fashion • Online Brand • Karachi",
+  rating: "4.7", reviews: "860", area: "Poore Pakistan mein delivery",
+  status: "Open · Closes 9 PM", phone: "0300-0000000", waNumber: "923000000000",
+  timings: "Daily 11am–9pm (orders 24/7 on Instagram & WhatsApp)",
+  location: "Karachi (online store) — poore Pakistan mein delivery",
+  navTabs: ["🛍️ Order","👗 Collection","💰 Prices","📏 Size Chart","🚚 Delivery","💳 Payment","🔄 Return","🎁 Sale"],
+  quick: ["🛍️ Place Order","💰 Prices","🚚 Delivery","📏 Size Chart"],
+  products: [
+    { n: "Lawn 3-Piece", p: "PKR 4,500 – 6,500" },
+    { n: "Pret Kurta", p: "PKR 3,200 – 4,800" },
+    { n: "Formal 2-Piece", p: "PKR 9,500 – 14,000" },
+    { n: "Dupatta", p: "PKR 1,200" }
+  ],
+  sizes: ["XS","S","M","L","XL"],
+  welcome: "Assalam o Alaikum! 👋 Welcome to **Zaraa Couture**.\n\nI can help with prices, sizes, delivery, and placing your order. How can I help you today? ✨",
+  // Har topic: kw = keywords, en = English jawab, ur = Roman Urdu jawab
+  replies: [
+    { kw:['size chart','sizes','size','naap','chest','fitting'],
+      en:"**Size Chart (chest, inches)**\nXS – 34 · S – 36 · M – 38 · L – 40 · XL – 42\n\nCustom stitching available: +PKR 800 (5 extra days). 📏",
+      ur:"**Size Chart (chest, inches)**\nXS – 34 · S – 36 · M – 38 · L – 40 · XL – 42\n\nCustom stitching bhi available hai: +PKR 800 (5 din extra). 📏" },
+    { kw:['custom','stitch','silai','tailor'],
+      en:"Custom stitching is available for +PKR 800 and takes 5 extra days. Stitched/custom items are not returnable. ✂️",
+      ur:"Custom stitching +PKR 800 mein available hai aur 5 din extra lagte hain. Stitched/custom items return nahi hote. ✂️" },
+    { kw:['deliver','shipping','dispatch','kitne din','pohanch','pahunch','charges'],
+      en:"**Delivery**\n• Karachi: 2–3 days (PKR 200)\n• Rest of Pakistan: 4–6 days (PKR 350)\n• Free delivery on orders above PKR 8,000 🚚",
+      ur:"**Delivery**\n• Karachi: 2–3 din (PKR 200)\n• Baaki Pakistan: 4–6 din (PKR 350)\n• PKR 8,000 se upar ke order par delivery free 🚚" },
+    { kw:['cod','cash on delivery','payment','pay','easypaisa','jazzcash','bank','advance','paisay'],
+      en:"**Payment options**\n• Cash on Delivery (COD)\n• Bank transfer\n• Easypaisa / JazzCash 💳",
+      ur:"**Payment options**\n• Cash on Delivery (COD)\n• Bank transfer\n• Easypaisa / JazzCash 💳" },
+    { kw:['return','exchange','wapis','badal','refund'],
+      en:"Exchange within 7 days if the item is unused with tags. Stitched/custom items cannot be returned. 🔄",
+      ur:"7 din ke andar exchange ho sakta hai (unused aur tag ke sath). Stitched/custom items return nahi hote. 🔄" },
+    { kw:['sale','discount','offer','off','deal'],
+      en:"🎁 Eid Collection is on **15% OFF** this week! Want to place an order?",
+      ur:"🎁 Eid Collection par is hafte **15% OFF** hai! Order karna chahte hain?" },
+    { kw:['lawn'],
+      en:"**Lawn 3-Piece:** PKR 4,500 – 6,500 depending on the design. Sizes XS–XL. ☀️",
+      ur:"**Lawn 3-Piece:** PKR 4,500 – 6,500 (design ke mutabiq). Sizes XS–XL. ☀️" },
+    { kw:['pret','kurta','kurti'],
+      en:"**Pret Kurta:** PKR 3,200 – 4,800. Sizes XS–XL available. 👗",
+      ur:"**Pret Kurta:** PKR 3,200 – 4,800. Sizes XS–XL available hain. 👗" },
+    { kw:['formal','party','wedding','shadi','bridal'],
+      en:"**Formal 2-Piece:** PKR 9,500 – 14,000. Perfect for weddings & parties. ✨",
+      ur:"**Formal 2-Piece:** PKR 9,500 – 14,000. Shadi/party ke liye behtareen. ✨" },
+    { kw:['dupatta','dupata'],
+      en:"**Dupatta:** PKR 1,200. 🧣", ur:"**Dupatta:** PKR 1,200. 🧣" },
+    { kw:['collection','design','new','catalog','stock','available'],
+      en:"Our collection has Lawn, Pret and Formal. See the latest designs on our Instagram page, then order right here! 👗",
+      ur:"Hamare collection mein Lawn, Pret aur Formal hain. Latest designs Instagram par dekhein, phir yahin order karein! 👗" },
+    { kw:['price','prices','rate','cost','kitna','kitne','qeemat','keemat','menu'],
+      en:"**Our Prices**\n{LIST}\n\nWould you like to place an order? 😊",
+      ur:"**Hamari Prices**\n{LIST}\n\nOrder karna chahte hain? 😊" },
+    { kw:['timing','time','open','close','khula','waqt'],
+      en:"Our timings: {TIMINGS}. 🕐", ur:"Hamara timing: {TIMINGS}. 🕐" },
+    { kw:['location','address','kahan','where','shop','store'],
+      en:"📍 {LOCATION}\nContact: {PHONE}", ur:"📍 {LOCATION}\nContact: {PHONE}" },
+    { kw:['review','rating','star'],
+      en:"We're rated ⭐ {RATING}/5 from {REVIEWS} reviews. Thank you for your trust! 🙏",
+      ur:"Humari rating ⭐ {RATING}/5 hai ({REVIEWS} reviews). Aap ke trust ka shukriya! 🙏" },
+    { kw:['thanks','thank','shukriya','shukria'],
+      en:"You're most welcome! Anything else I can help with? 😊", ur:"Aap ka bohat shukriya! Aur koi madad chahiye? 😊" }
+  ]
+};
+/* ================================================================================== */
+
+let chatLang = null, isTyping = false, bookingShown = false;
+
+function fill(t) {
+  return t.replace('{LIST}', B.products.map(x => '• ' + x.n + ' – ' + x.p).join('\n'))
+    .replace('{TIMINGS}', B.timings).replace('{LOCATION}', B.location).replace('{PHONE}', B.phone)
+    .replace('{RATING}', B.rating).replace('{REVIEWS}', B.reviews);
+}
+const fmt = t => t.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+const timeNow = () => new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+const esc = s => s.replace(/'/g, "\\'");
+
+function init() {
+  document.getElementById('pIcon').textContent = B.icon;
+  document.getElementById('pName').textContent = B.name;
+  document.getElementById('pTag').textContent = B.tagline;
+  document.getElementById('pRating').innerHTML = `<span class="stars">★★★★★</span> ${B.rating} · ${B.reviews} reviews · ${B.area}`;
+  document.getElementById('pRow2').innerHTML = `<span class="status-badge">🕐 ${B.status}</span><a href="tel:${B.phone.replace(/-/g,'')}">📞 ${B.phone}</a><span>${B.products.length} Categories</span>`;
+  document.getElementById('navTabs').innerHTML = B.navTabs.map(t => `<button class="nav-tab" onclick="quickSend('${esc(t)}')">${t}</button>`).join('');
+  document.getElementById('quickBtns').innerHTML = B.quick.map(q => `<button class="qbtn" onclick="quickSend('${esc(q)}')">${q}</button>`).join('');
+  document.getElementById('fProduct').innerHTML = B.products.map(p => `<option>${p.n} (${p.p})</option>`).join('');
+  document.getElementById('fSize').innerHTML = B.sizes.map(s => `<option>${s}</option>`).join('');
+  addMsg(`Please select your preferred language to continue.<br>برائے مہربانی اپنی زبان کا انتخاب کریں:<div class="opts"><div class="opt" onclick="selectLang('ur')">🇵🇰 اردو</div><div class="opt" onclick="selectLang('en')">🇬🇧 English</div></div>`, 'bot');
+}
+
+function selectLang(l) {
+  chatLang = l;
+  addMsg(l === 'ur' ? '🇵🇰 اردو' : '🇬🇧 English', 'user');
+  setTimeout(() => addMsg(B.welcome + opts(B.quick), 'bot'), 400);
+}
+
+function opts(list) {
+  return '<div class="opts">' + list.map(q => `<div class="opt" onclick="quickSend('${esc(q)}')">${q}</div>`).join('') + '</div>';
+}
+
+function addMsg(text, type) {
+  const box = document.getElementById('msgs');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-wrap ' + (type === 'user' ? 'user-wrap' : 'bot-wrap');
+  const div = document.createElement('div');
+  div.className = 'msg ' + type;
+  div.innerHTML = fmt(text);
+  wrap.appendChild(div);
+  if (type !== 'typing') {
+    const tm = document.createElement('div');
+    tm.className = 'msg-time'; tm.textContent = timeNow();
+    wrap.appendChild(tm);
+  }
+  box.appendChild(wrap);
+  box.scrollTop = box.scrollHeight;
+  return wrap;
+}
+
+function addActionBtns() {
+  if (bookingShown) return;
+  bookingShown = true;
+  const box = document.getElementById('msgs');
+  const w = document.createElement('div');
+  w.className = 'btns';
+  w.innerHTML =
+    `<button style="background:linear-gradient(135deg,var(--primary),var(--dark))" onclick="openModal()">🛍️ Place Order</button>` +
+    `<a style="background:#2a0c18" href="tel:${B.phone.replace(/-/g,'')}">📞 Call</a>` +
+    `<a style="background:#25D366" target="_blank" href="https://wa.me/${B.waNumber}?text=${encodeURIComponent('Assalam o Alaikum, I would like to know more about ' + B.name + '.')}">💬 WhatsApp</a>`;
+  box.appendChild(w);
+  box.scrollTop = box.scrollHeight;
+}
+
+const orderKw = ['place order','order','buy','purchase','khareed','kharid','mangwa','lena hai','chahiye'];
+const urduWords = ['kya','hai','hain','kaise','kahan','kab','chahiye','karna','karein','mujhe','aap','ap','batao','bata','acha','theek','kitna','kitne','wala','wali','aur','nahi','nahin','haan','han','assalam','salam','shukriya','meharbani','milta','milti','kitni','kar','sakte'];
+const isUrdu = t => t.toLowerCase().split(/\s+/).some(w => urduWords.includes(w.replace(/[^\w]/g, '')));
+
+function getReply(text) {
+  const lower = text.toLowerCase();
+  const ur = chatLang === 'ur' || isUrdu(text) || /[\u0600-\u06FF]/.test(text);
+
+  if (orderKw.some(k => lower.includes(k))) {
+    addActionBtns();
+    return (ur ? 'Zaroor! Neeche diye gaye button se order form bharein, call karein ya WhatsApp par baat karein. 🛍️'
+               : 'Sure! Fill in the order form below, call us, or message us on WhatsApp. 🛍️') + opts(['🔙 Main Menu']);
+  }
+  // sab se lamba keyword match pehle (specific topics pehle)
+  let best = null, bestLen = 0;
+  for (const r of B.replies) for (const k of r.kw) if (lower.includes(k) && k.length > bestLen) { best = r; bestLen = k.length; }
+  if (best) return fill(ur ? best.ur : best.en) + opts(['🛍️ Place Order', '🔙 Main Menu']);
+
+  return (ur
+    ? `Shukriya! Aap "Prices", "Delivery", "Size Chart" ya "Payment" ke baare mein pooch sakte hain. Ya seedha humein WhatsApp/call karein: ${B.phone} 😊`
+    : `Thanks for reaching out! Ask me about "Prices", "Delivery", "Size Chart" or "Payment" — or message/call us directly: ${B.phone} 😊`) + opts(B.quick);
+}
+
+function quickSend(text) {
+  const clean = text.replace(/^[^\w]*\s*/u, '').trim() || text;
+  if (clean.toLowerCase() === 'main menu') { addMsg(text, 'user'); addMsg(B.welcome + opts(B.quick), 'bot'); return; }
+  if (/^(place order|order)$/i.test(clean)) { addMsg(clean, 'user'); openModal(); return; }
+  sendUserMsg(clean);
+}
+
+function sendMsg() {
+  const i = document.getElementById('userInput');
+  const t = i.value.trim();
+  if (!t || isTyping) return;
+  i.value = '';
+  sendUserMsg(t);
+}
+
+async function sendUserMsg(text) {
+  if (isTyping) return;
+  addMsg(text, 'user');
+  isTyping = true;
+  document.getElementById('sendBtn').disabled = true;
+  const tp = addMsg('Typing...', 'typing');
+  await new Promise(r => setTimeout(r, 500 + Math.random() * 400));
+  tp.remove();
+  addMsg(getReply(text), 'bot');
+  isTyping = false;
+  document.getElementById('sendBtn').disabled = false;
+}
+
+function openModal() {
+  document.getElementById('formState').style.display = 'block';
+  document.getElementById('successState').style.display = 'none';
+  ['fName', 'fPhone', 'fAddress'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+function submitForm() {
+  const name = fName.value.trim(), phone = fPhone.value.trim(), addr = fAddress.value.trim();
+  const product = fProduct.value, size = fSize.value, qty = fQty.value;
+  const digits = phone.replace(/[\s\-+()]/g, '');
+  if (!name || !addr) return alert('Please fill in Name and Delivery Address.');
+  if (!/^(03\d{9}|923\d{9})$/.test(digits)) return alert('Please enter a valid phone number (03XXXXXXXXX).');
+
+  let msg = `*New Order — ${B.name}*\n\n👤 *Name:* ${name}\n📞 *Phone:* ${phone}\n👗 *Product:* ${product}\n📏 *Size:* ${size}\n🔢 *Qty:* ${qty}\n📍 *Address:* ${addr}\n\nKindly confirm my order. Thank you! 🙏`;
+  waLink.href = `https://wa.me/${B.waNumber}?text=${encodeURIComponent(msg)}`;
+  callLink.href = `tel:${B.phone.replace(/-/g, '')}`;
+  successMsg.textContent = `Order details noted for ${name}. Tap "Send on WhatsApp" to confirm — your order isn't final until confirmed.`;
+  formState.style.display = 'none';
+  successState.style.display = 'block';
+  addMsg(`📩 Almost done, ${name}!\n${product} · Size ${size} · Qty ${qty}\nPlease send the order on WhatsApp to finalize it.`, 'bot');
+}
+
+init();
+</script>
+</body>
+</html>
